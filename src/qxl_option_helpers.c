@@ -10,32 +10,31 @@
 
 #include "qxl_option_helpers.h"
 
-int get_int_option(OptionInfoPtr options, int token,
+int get_int_option(OptionInfoPtr options, int option_index,
                    const char *env_name)
 {
-    int value;
     if (env_name && getenv(env_name)) {
         return atoi(getenv(env_name));
     }
-    return xf86GetOptValInteger(options, token, &value) ? value : 0;
+    return options[option_index].value.num;
 }
 
-const char *get_str_option(OptionInfoPtr options, int token,
+const char *get_str_option(OptionInfoPtr options, int option_index,
                            const char *env_name)
 {
     if (getenv(env_name)) {
         return getenv(env_name);
     }
-    return xf86GetOptValString(options, token);
+    return options[option_index].value.str;
 }
 
-int get_bool_option(OptionInfoPtr options, int token,
+int get_bool_option(OptionInfoPtr options, int option_index,
                      const char *env_name)
 {
     const char* value = getenv(env_name);
 
     if (!value) {
-        return xf86ReturnOptValBool(options, token, FALSE);
+        return options[option_index].value.bool;
     }
     if (strcmp(value, "0") == 0 ||
         strcasecmp(value, "off") == 0 ||
