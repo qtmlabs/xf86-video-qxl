@@ -34,7 +34,7 @@ int get_bool_option(OptionInfoPtr options, int option_index,
     const char* value = getenv(env_name);
 
     if (!value) {
-        return options[option_index].value.bool;
+        return options[option_index].value.boolean;
     }
     if (strcmp(value, "0") == 0 ||
         strcasecmp(value, "off") == 0 ||
