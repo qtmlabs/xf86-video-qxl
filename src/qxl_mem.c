@@ -629,6 +629,13 @@ static void qxl_bo_update_area(qxl_surface_t *surf, int x1, int y1, int x2, int 
 {
     struct QXLRam *ram_header = get_ram_header(surf->qxl);
     
+    if (x1 < 0)
+	x1 = 0;
+    if (y1 < 0)
+	y1 = 0;
+    if (x1 == x2 || y1 == y2)
+	return;
+
     ram_header->update_area.top = y1;
     ram_header->update_area.bottom = y2;
     ram_header->update_area.left = x1;
