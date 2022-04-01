@@ -725,6 +725,7 @@ qxl_screen_init (SCREEN_INIT_ARGS_DECL)
     printf ("surf0 size: %d\n", qxl->rom->surface0_area_size);
     
     qxl_save_state (pScrn);
+    qxl_restore_state (pScrn);
     qxl_blank_screen (pScreen, SCREEN_SAVER_ON);
     
     miClearVisualTypes ();
