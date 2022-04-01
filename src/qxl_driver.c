@@ -721,9 +721,6 @@ qxl_screen_init (SCREEN_INIT_ARGS_DECL)
 #endif
     ram_header = (void *)((unsigned long)qxl->ram + (unsigned long)qxl->rom->ram_header_offset);
     
-    printf ("ram_header at %d\n", qxl->rom->ram_header_offset);
-    printf ("surf0 size: %d\n", qxl->rom->surface0_area_size);
-    
     qxl_save_state (pScrn);
     qxl_restore_state (pScrn);
     qxl_blank_screen (pScreen, SCREEN_SAVER_ON);
