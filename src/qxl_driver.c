@@ -458,7 +458,6 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn (pScreen);
     qxl_screen_t *qxl = pScrn->driverPrivate;
-    Bool result;
     
     ErrorF ("Disabling FB access for %d\n", pScrn->scrnIndex);
 #ifndef XF86_SCRN_INTERFACE
@@ -467,11 +466,6 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
     pScrn->EnableDisableFBAccess (pScrn, FALSE);
 #endif
     
-    pScreen->CreateScreenResources = qxl->create_screen_resources;
-    pScreen->CloseScreen = qxl->close_screen;
-    
-    result = pScreen->CloseScreen (CLOSE_SCREEN_ARGS);
-    
 #ifndef XSPICE
     if (!xf86IsPrimaryPci (qxl->pci) && qxl->primary)
 	qxl_reset_and_create_mem_slots (qxl);
@@ -479,13 +473,18 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
     
     if (pScrn->vtSema)
     {
+	ioport_write (qxl, QXL_IO_RESET, 0);
+
 	qxl_restore_state (pScrn);
 	qxl_mark_mem_unverifiable (qxl);
 	qxl_unmap_memory (qxl);
     }
     pScrn->vtSema = FALSE;
+
+    pScreen->CreateScreenResources = qxl->create_screen_resources;
+    pScreen->CloseScreen = qxl->close_screen;
     
-    return result;
+    return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 void
@@ -869,6 +868,8 @@ qxl_enter_vt (VT_FUNC_ARGS_DECL)
     qxl_create_desired_modes (qxl);
     
     pScrn->EnableDisableFBAccess (XF86_SCRN_ARG (pScrn), TRUE);
+
+    pScrn->vtSema = TRUE;
     
     return TRUE;
 }
@@ -890,6 +891,8 @@ qxl_leave_vt (VT_FUNC_ARGS_DECL)
     
     qxl_restore_state (pScrn);
     qxl->device_primary = QXL_DEVICE_PRIMARY_NONE;
+
+    pScrn->vtSema = FALSE;
 }
 
 static Bool
@@ -1260,6 +1263,7 @@ qxl_init_scrn (ScrnInfoPtr pScrn, Bool kms)
 	pScrn->ScreenInit       = qxl_screen_init;
 	pScrn->EnterVT          = qxl_enter_vt;
 	pScrn->LeaveVT          = qxl_leave_vt;
+	pScrn->vtSema           = TRUE;
     }
     pScrn->SwitchMode       = qxl_switch_mode;
     pScrn->ValidMode        = NULL;
