@@ -749,7 +749,16 @@ qxl_surface_kill (qxl_surface_t *surface)
 	surface_add_to_cache (surface);
     }
     
-    qxl_surface_unref (surface->cache, surface->id);
+    if (surface->id)
+	qxl_surface_unref (surface->cache, surface->id);
+    else
+    {
+	if (surface->host_image)
+	    pixman_image_unref (surface->host_image);
+	if (surface->dev_image)
+	    pixman_image_unref (surface->dev_image);
+	free (surface);
+    }
 }
 
 
