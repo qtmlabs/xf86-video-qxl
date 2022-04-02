@@ -233,6 +233,9 @@ qxl_reset_and_create_mem_slots (qxl_screen_t *qxl)
     qxl->slot_id_bits = qxl->rom->slot_id_bits;
     qxl->va_slot_mask = (~(uint64_t)0) >> (qxl->slot_id_bits + qxl->slot_gen_bits);
 
+    if (qxl->mem_slots)
+	free (qxl->mem_slots);
+
     qxl->mem_slots = xnfalloc (qxl->n_mem_slots * sizeof (qxl_memslot_t));
 
 #ifdef XSPICE
@@ -450,6 +453,15 @@ struct qxl_ums_bo {
     qxl_screen_t *qxl;
     xorg_list_t bos;
 };
+
+void qxl_ums_bo_force_remove_all (qxl_screen_t *qxl)
+{
+    struct qxl_ums_bo *bo, *next;
+    xorg_list_for_each_entry_safe (bo, next, &qxl->ums_bos, bos) {
+	xorg_list_del (&bo->bos);
+	free (bo);
+    }
+}
 
 static struct qxl_bo *qxl_bo_alloc_internal(qxl_screen_t *qxl, int type, int flags, unsigned long size, const char *name)
 {

@@ -591,6 +591,7 @@ void qxl_mem_unverifiable(struct qxl_mem *mem);
 #else
 static inline void qxl_mem_unverifiable(struct qxl_mem *mem) {}
 #endif
+void qxl_ums_bo_force_remove_all (qxl_screen_t *qxl);
 
 /*
  * I/O port commands

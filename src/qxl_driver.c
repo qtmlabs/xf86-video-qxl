@@ -365,6 +365,7 @@ qxl_resize_surface0 (qxl_screen_t *qxl, long surface0_size)
 	qxl_io_destroy_all_surfaces (qxl); // redundant?
 	qxl_io_flush_release (qxl);
 	qxl_dump_ring_stat (qxl);
+	qxl_ums_bo_force_remove_all (qxl);
 	qxl_surface_cache_replace_all (qxl->surface_cache, surfaces);
 #else
 	ErrorF ("resizing surface0 compiled out\n");
@@ -479,6 +480,9 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
 	qxl_mark_mem_unverifiable (qxl);
 	qxl_unmap_memory (qxl);
     }
+
+    qxl_ums_bo_force_remove_all (qxl);
+
     pScrn->vtSema = FALSE;
 
     pScreen->CreateScreenResources = qxl->create_screen_resources;

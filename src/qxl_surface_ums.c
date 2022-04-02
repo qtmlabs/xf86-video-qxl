@@ -799,6 +799,12 @@ qxl_surface_cache_evacuate_all (surface_cache_t *cache)
 	
 	s->host_image = NULL;
 
+	if (s->dev_image)
+	    pixman_image_unref (s->dev_image);
+
+	if (s->bo)
+	    free (s->bo);
+
 	unlink_surface (s);
 	
 	evacuated->prev = NULL;
