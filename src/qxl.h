@@ -447,6 +447,7 @@ int               qxl_ring_cons        (struct qxl_ring        *ring);
 surface_cache_t *   qxl_surface_cache_create (qxl_screen_t *qxl);
 qxl_surface_t *	    qxl_surface_cache_create_primary (qxl_screen_t *qxl,
 						struct QXLMode *mode);
+void                qxl_surface_cache_destroy (surface_cache_t *cache);
 void *              qxl_surface_get_host_bits(qxl_surface_t *surface);
 qxl_surface_t *	    qxl_surface_create (qxl_screen_t *qxl,
 					int	      width,

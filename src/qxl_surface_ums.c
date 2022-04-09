@@ -196,6 +196,41 @@ qxl_surface_cache_create (qxl_screen_t *qxl)
     return cache;
 }
 
+void qxl_surface_cache_destroy (surface_cache_t *cache)
+{
+    qxl_surface_t *s;
+
+    for (int i = 0; i < N_CACHED_SURFACES; ++i) {
+	s = cache->cached_surfaces[i];
+	cache->cached_surfaces[i] = NULL;
+	if (s != NULL) {
+	    if (s->dev_image)
+		pixman_image_unref (s->dev_image);
+	    if (s->host_image)
+		pixman_image_unref (s->host_image);
+	    if (s->bo)
+		free (s->bo);
+	}
+    }
+
+    s = cache->live_surfaces;
+    while (s != NULL) {
+	qxl_surface_t *next = s->next;
+	if (s->dev_image)
+	    pixman_image_unref (s->dev_image);
+	if (s->host_image)
+	    pixman_image_unref (s->host_image);
+	if (s->bo)
+	    free (s->bo);
+	s = next;
+    }
+
+    if (cache->all_surfaces)
+	free (cache->all_surfaces);
+
+    free (cache);
+}
+
 void
 qxl_surface_cache_sanity_check (surface_cache_t *qxl)
 {
@@ -621,6 +656,9 @@ surface_destroy (qxl_surface_t *surface)
 	pixman_image_unref (surface->dev_image);
     if (surface->host_image)
 	pixman_image_unref (surface->host_image);
+
+    if (!surface->bo)
+	return;
 
 #if 0
     ErrorF("destroy %ld\n", (long int)surface->end - (long int)surface->address);

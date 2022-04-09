@@ -459,6 +459,7 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn (pScreen);
     qxl_screen_t *qxl = pScrn->driverPrivate;
+    Bool result;
     
     ErrorF ("Disabling FB access for %d\n", pScrn->scrnIndex);
 #ifndef XF86_SCRN_INTERFACE
@@ -467,11 +468,25 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
     pScrn->EnableDisableFBAccess (pScrn, FALSE);
 #endif
     
+    pScreen->CreateScreenResources = qxl->create_screen_resources;
+    pScreen->CloseScreen = qxl->close_screen;
+
+    result = (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
+
 #ifndef XSPICE
     if (!xf86IsPrimaryPci (qxl->pci) && qxl->primary)
 	qxl_reset_and_create_mem_slots (qxl);
 #endif
     
+    if (qxl->primary)
+    {
+	qxl_surface_kill (qxl->primary);
+	qxl_surface_cache_sanity_check (qxl->surface_cache);
+	qxl->bo_funcs->destroy_primary(qxl, qxl->primary_bo);
+    }
+
+    qxl_surface_cache_destroy (qxl->surface_cache);
+
     if (pScrn->vtSema)
     {
 	ioport_write (qxl, QXL_IO_RESET, 0);
@@ -485,10 +500,7 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
 
     pScrn->vtSema = FALSE;
 
-    pScreen->CreateScreenResources = qxl->create_screen_resources;
-    pScreen->CloseScreen = qxl->close_screen;
-    
-    return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
+    return result;
 }
 
 void
