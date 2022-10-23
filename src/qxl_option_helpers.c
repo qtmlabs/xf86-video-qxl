@@ -34,7 +34,11 @@ int get_bool_option(OptionInfoPtr options, int option_index,
     const char* value = getenv(env_name);
 
     if (!value) {
+#if (XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1, 20, 99, 1, 0))
+        return options[option_index].value.bool;
+#else
         return options[option_index].value.boolean;
+#endif
     }
     if (strcmp(value, "0") == 0 ||
         strcasecmp(value, "off") == 0 ||
