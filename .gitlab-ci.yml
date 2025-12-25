@@ -4,6 +4,16 @@
 # Please see the ci-templates documentation for details:
 # https://freedesktop.pages.freedesktop.org/ci-templates/
 
+# Detached MR pipelines, see
+# https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/540
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+
 .templates_sha: &template_sha 25e8e9f020880aa35fffe3d6b259b933f0f9449f # see https://docs.gitlab.com/ee/ci/yaml/#includefile
 
 
