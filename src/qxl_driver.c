@@ -479,6 +479,8 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
 
     if (pScrn->vtSema)
     {
+	ioport_write (qxl, QXL_IO_RESET, 0);
+
 	qxl_restore_state (pScrn);
 	qxl_mark_mem_unverifiable (qxl);
 	qxl_unmap_memory (qxl);
@@ -726,6 +728,7 @@ qxl_screen_init (SCREEN_INIT_ARGS_DECL)
     printf ("surf0 size: %d\n", qxl->rom->surface0_area_size);
 
     qxl_save_state (pScrn);
+    qxl_restore_state (pScrn);
     qxl_blank_screen (pScreen, SCREEN_SAVER_ON);
 
     miClearVisualTypes ();
@@ -870,6 +873,8 @@ qxl_enter_vt (VT_FUNC_ARGS_DECL)
 
     pScrn->EnableDisableFBAccess (XF86_SCRN_ARG (pScrn), TRUE);
 
+    pScrn->vtSema = TRUE;
+
     return TRUE;
 }
 
@@ -890,6 +895,8 @@ qxl_leave_vt (VT_FUNC_ARGS_DECL)
 
     qxl_restore_state (pScrn);
     qxl->device_primary = QXL_DEVICE_PRIMARY_NONE;
+
+    pScrn->vtSema = FALSE;
 }
 
 static Bool
@@ -1264,6 +1271,7 @@ qxl_init_scrn (ScrnInfoPtr pScrn, Bool kms)
 	pScrn->ScreenInit       = qxl_screen_init;
 	pScrn->EnterVT          = qxl_enter_vt;
 	pScrn->LeaveVT          = qxl_leave_vt;
+	pScrn->vtSema           = TRUE;
     }
     pScrn->SwitchMode       = qxl_switch_mode;
     pScrn->ValidMode        = NULL;
