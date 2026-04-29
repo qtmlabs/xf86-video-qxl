@@ -365,6 +365,7 @@ qxl_resize_surface0 (qxl_screen_t *qxl, long surface0_size)
 	qxl_io_destroy_all_surfaces (qxl); // redundant?
 	qxl_io_flush_release (qxl);
 	qxl_dump_ring_stat (qxl);
+	qxl_ums_bo_force_remove_all (qxl);
 	qxl_surface_cache_replace_all (qxl->surface_cache, surfaces);
 #else
 	ErrorF ("resizing surface0 compiled out\n");
@@ -477,6 +478,15 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
 	qxl_reset_and_create_mem_slots (qxl);
 #endif
 
+    if (qxl->primary)
+    {
+	qxl_surface_kill (qxl->primary);
+	qxl_surface_cache_sanity_check (qxl->surface_cache);
+	qxl->bo_funcs->destroy_primary(qxl, qxl->primary_bo);
+    }
+
+    qxl_surface_cache_destroy (qxl->surface_cache);
+
     if (pScrn->vtSema)
     {
 	ioport_write (qxl, QXL_IO_RESET, 0);
@@ -485,6 +495,9 @@ qxl_close_screen (CLOSE_SCREEN_ARGS_DECL)
 	qxl_mark_mem_unverifiable (qxl);
 	qxl_unmap_memory (qxl);
     }
+
+    qxl_ums_bo_force_remove_all (qxl);
+
     pScrn->vtSema = FALSE;
 
     return result;
@@ -533,6 +546,8 @@ Bool
 qxl_resize_primary_to_virtual (qxl_screen_t *qxl)
 {
     long new_surface0_size;
+    ScreenPtr pScreen = qxl->pScrn->pScreen;
+    PixmapPtr root = pScreen->GetScreenPixmap (pScreen);
 
     if ((qxl->primary_mode.x_res == qxl->virtual_x &&
          qxl->primary_mode.y_res == qxl->virtual_y) &&
@@ -559,6 +574,9 @@ qxl_resize_primary_to_virtual (qxl_screen_t *qxl)
 
     if (qxl->primary)
     {
+	if (get_surface (root) == qxl->primary)
+	    set_surface (root, NULL);
+
 	qxl_surface_kill (qxl->primary);
 	qxl_surface_cache_sanity_check (qxl->surface_cache);
 	qxl->bo_funcs->destroy_primary(qxl, qxl->primary_bo);
@@ -569,9 +587,6 @@ qxl_resize_primary_to_virtual (qxl_screen_t *qxl)
 
     if (qxl->screen_resources_created)
     {
-        ScreenPtr pScreen = qxl->pScrn->pScreen;
-	PixmapPtr root = pScreen->GetScreenPixmap (pScreen);
-
         if (qxl->deferred_fps <= 0)
         {
             qxl_surface_t *surf;
@@ -637,7 +652,7 @@ qxl_create_screen_resources (ScreenPtr pScreen)
     {
         qxl_set_screen_pixmap_header (pScreen);
 
-        if ((surf = get_surface (pPixmap)))
+        if ((surf = get_surface (pPixmap)) && surf != qxl->primary)
             qxl_surface_kill (surf);
 
         set_surface (pPixmap, qxl->primary);
