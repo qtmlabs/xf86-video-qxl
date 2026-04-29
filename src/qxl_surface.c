@@ -271,6 +271,13 @@ qxl_upload_box (qxl_surface_t *surface, int x1, int y1, int x2, int y2)
 {
     int tile_x1, tile_y1;
 
+    if (x1 < 0)
+	x1 = 0;
+    if (y1 < 0)
+	y1 = 0;
+    if (x1 == x2 || y1 == y2)
+	return;
+
     for (tile_y1 = y1; tile_y1 < y2; tile_y1 += TILE_HEIGHT)
     {
 	for (tile_x1 = x1; tile_x1 < x2; tile_x1 += TILE_WIDTH)
